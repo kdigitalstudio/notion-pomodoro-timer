@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pomodoro Timer Widget Builder | KDigitalStudio</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #E8DFF5 0%, #FCE1E4 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Ko-fi Container */
+        .kofi-container {
+            position: fixed;
+            left: calc(50% + 350px);
+            top: calc(50% - 100px);
+            transform: translateY(-50%);
+            background: white;
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 200px;
+            z-index: 1000;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .kofi-container:hover {
+            transform: translateY(-50%) translateY(-2px);
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Feedback Container */
+        .feedback-container {
+            position: fixed;
+            left: calc(50% + 350px);
+            top: calc(50% + 100px);
+            transform: translateY(-50%);
+            background: white;
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 200px;
+            z-index: 1000;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .feedback-container:hover {
+            transform: translateY(-50%) translateY(-2px);
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .kofi-text,
+        .feedback-text {
+            font-size: 14px;
+            color: #4a5568;
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+
+        .kofi-button,
+        .feedback-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #b794d5 0%, #f4c3d9 100%);
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 13px;
+            transition: transform 0.2s ease;
+        }
+
+        .kofi-button:hover,
+        .feedback-button:hover {
+            transform: scale(1.05);
+        }
+
+        @media (max-width: 768px) {
+            .kofi-container {
+                position: static;
+                transform: none;
+                margin: 0 auto 20px;
+                max-width: 250px;
+            }
+            
+            .kofi-container:hover {
+                transform: translateY(-2px);
+            }
+
+            .feedback-container {
+                position: static;
+                transform: none;
+                margin: 0 auto 20px;
+                max-width: 250px;
+            }
+            
+            .feedback-container:hover {
+                transform: translateY(-2px);
+            }
+        }
+
+        h1 {
+            font-size: 28px;
+            color: #2d3748;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #718096;
+            margin-bottom: 40px;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        input[type="number"],
+        input[type="text"],
+        input[type="color"],
+        select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 15px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="number"]:focus,
+        input[type="text"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        input[type="color"] {
+            height: 50px;
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .toggle-group {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .toggle-group.single {
+            grid-template-columns: 1fr;
+        }
+
+        .toggle-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .toggle-item:has(input:checked) {
+            border-color: #667eea;
+            background: #f7fafc;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 40px;
+            height: 20px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #cbd5e0;
+            transition: 0.3s;
+            border-radius: 20px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 14px;
+            width: 14px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #667eea;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+
+        .time-inputs {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .time-input-group {
+            text-align: center;
+        }
+
+        .time-input-group label {
+            font-size: 12px;
+            margin-bottom: 6px;
+        }
+
+        .time-input-group input {
+            text-align: center;
+        }
+
+        .color-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .color-row:last-child {
+            border-bottom: none;
+        }
+
+        .color-row label {
+            margin-bottom: 0;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .color-row-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .color-hex {
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            color: #718096;
+        }
+
+        .color-row input[type="color"] {
+            width: 36px;
+            height: 36px;
+            padding: 2px;
+            border-radius: 8px;
+        }
+
+        .preview-section {
+            margin: 40px 0;
+            padding: 30px;
+            background: #f7fafc;
+            border-radius: 15px;
+            text-align: center;
+            position: relative;
+        }
+
+        .preview-label {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 20px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        #preview-frame {
+            width: 100%;
+            height: 400px;
+            border: 2px dashed #cbd5e0;
+            border-radius: 10px;
+            background: white;
+        }
+
+        .generate-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #E8DFF5 0%, #FCE1E4 100%);
+            color: #453952;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .result-section {
+            display: none;
+            margin-top: 30px;
+            padding: 25px;
+            background: #f0fff4;
+            border: 2px solid #9ae6b4;
+            border-radius: 12px;
+        }
+
+        .result-section.show {
+            display: block;
+        }
+
+        .result-label {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .url-display {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            word-break: break-all;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            color: #4a5568;
+            margin-bottom: 15px;
+        }
+
+        .copy-btn {
+            width: 100%;
+            padding: 12px;
+            background: #48bb78;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .copy-btn:hover {
+            background: #38a169;
+        }
+
+        .copy-btn.copied {
+            background: #2d3748;
+        }
+
+        .instructions {
+            margin-top: 20px;
+            padding: 20px;
+            background: #edf2f7;
+            border-radius: 10px;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #4a5568;
+        }
+
+        .instructions strong {
+            color: #2d3748;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            color: #718096;
+            font-size: 13px;
+        }
+
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .section-divider {
+            border-top: 2px solid #e2e8f0;
+            margin: 30px 0;
+            padding-top: 20px;
+        }
+
+        .section-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #718096;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        .info-box {
+            background: #edf2f7;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 13px;
+            color: #4a5568;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Ko-fi Support Box -->
+    <div class="kofi-container">
+        <div class="kofi-text">Are you loving it? Thank you for your support!</div>
+        <a href="https://ko-fi.com/kdigitalstudio" target="_blank" class="kofi-button">
+            ☕ Buy me a diet coke
+        </a>
+    </div>
+
+    <!-- Feedback Box -->
+    <div class="feedback-container">
+        <div class="feedback-text">Have feedback or a feature request?</div>
+        <a href="https://docs.google.com/forms/d/e/1FAIpQLSfns1MuZ5_-2Ks7enwSlN4VTMFqJ4LW60yn3Ujex4Uxn0CaXw/viewform?usp=header" target="_blank" class="feedback-button">
+            📝 Share feedback
+        </a>
+    </div>
+
+    <div class="container">
+        <h1>⏰ Pomodoro Timer Widget Builder</h1>
+        <p class="subtitle">Stay focused with the Pomodoro Technique</p>
+
+        <form id="timer-form">
+            <!-- Timer Settings -->
+            <div class="section-title">Timer Durations</div>
+
+            <div class="info-box">
+                ⏱️ Customize your Pomodoro intervals! Classic: 25min work, 5min short break, 15min long break. After 4 work sessions, take a long break.
+            </div>
+
+            <div class="form-group">
+                <label>Session Durations (minutes)</label>
+                <div class="time-inputs">
+                    <div class="time-input-group">
+                        <label for="work-duration">Work</label>
+                        <input type="number" id="work-duration" min="1" max="60" value="25">
+                    </div>
+                    <div class="time-input-group">
+                        <label for="short-break">Short Break</label>
+                        <input type="number" id="short-break" min="1" max="30" value="5">
+                    </div>
+                    <div class="time-input-group">
+                        <label for="long-break">Long Break</label>
+                        <input type="number" id="long-break" min="1" max="60" value="15">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="sessions-before-long">Work Sessions Before Long Break</label>
+                <input type="number" id="sessions-before-long" min="2" max="8" value="4">
+            </div>
+
+            <div class="form-group">
+                <label for="widget-text">Widget Text</label>
+                <input type="text" id="widget-text" placeholder="e.g., Focus Time, Reading Session" value="WORK SESSION" maxlength="30">
+            </div>
+
+            <!-- Display Options -->
+            <div class="section-divider"></div>
+            <div class="section-title">Display Options</div>
+
+            <div class="form-group">
+                <div class="toggle-group">
+                    <div class="toggle-item">
+                        <span>Show Session Counter</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="show-counter" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="toggle-item">
+                        <span>Show Progress Ring</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="show-ring" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="toggle-item">
+                        <span>Auto-start Breaks</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="auto-start-breaks">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Theme</label>
+                <div class="toggle-group single">
+                    <div class="toggle-item">
+                        <span>Dark Mode</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="dark-mode">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Style Section -->
+            <div class="section-divider"></div>
+            <div class="section-title">Style</div>
+
+            <div class="form-group">
+                <div class="color-row">
+                    <label for="work-color">Work Session Color</label>
+                    <div class="color-row-right">
+                        <span class="color-hex" id="work-color-hex">#F4C3D9</span>
+                        <input type="color" id="work-color" value="#f4c3d9">
+                    </div>
+                </div>
+                <div class="color-row">
+                    <label for="break-color">Break Color</label>
+                    <div class="color-row-right">
+                        <span class="color-hex" id="break-color-hex">#48BB78</span>
+                        <input type="color" id="break-color" value="#48bb78">
+                    </div>
+                </div>
+                <div class="color-row">
+                    <label for="text-color">Text Color</label>
+                    <div class="color-row-right">
+                        <span class="color-hex" id="text-color-hex">#37352F</span>
+                        <input type="color" id="text-color" value="#37352F">
+                    </div>
+                </div>
+                <div class="color-row">
+                    <label for="bg-color">Background Color</label>
+                    <div class="color-row-right">
+                        <span class="color-hex" id="bg-color-hex">#FFFFFF</span>
+                        <input type="color" id="bg-color" value="#FFFFFF">
+                    </div>
+                </div>
+            </div>
+
+            <div class="preview-section">
+                <div class="preview-label">Preview</div>
+                <iframe id="preview-frame" src=""></iframe>
+            </div>
+
+            <button type="submit" class="generate-btn">Generate Widget URL</button>
+        </form>
+
+        <div id="result-section" class="result-section">
+            <div class="result-label">✅ Your Pomodoro Timer Widget URL:</div>
+            <div id="url-display" class="url-display"></div>
+            <button id="copy-btn" class="copy-btn">Copy URL</button>
+            
+            <div class="instructions">
+                <strong>How to add to Notion:</strong><br>
+                1. Copy the URL above<br>
+                2. In your Notion page, type <code>/embed</code><br>
+                3. Paste the URL and press Enter<br>
+                4. Click Start to begin your focus session!<br><br>
+                <strong>Tip:</strong> The timer runs in your browser. Keep the Notion page open while working.
+            </div>
+        </div>
+
+        <div class="footer">
+            Made with ♥ by <a href="https://kdigitalstudio.com" target="_blank">KDigitalStudio</a>
+        </div>
+    </div>
+
+    <script>
+        // Base URL
+        const WIDGET_BASE_URL = 'https://kdigitalstudio.github.io/notion-pomodoro-timer/timer-widget.html';
+
+        // Get form elements
+        const form = document.getElementById('timer-form');
+        const previewFrame = document.getElementById('preview-frame');
+        const resultSection = document.getElementById('result-section');
+        const urlDisplay = document.getElementById('url-display');
+        const copyBtn = document.getElementById('copy-btn');
+
+        // Settings object
+        const settings = {
+            workDuration: 25,
+            shortBreak: 5,
+            longBreak: 15,
+            sessionsBeforeLong: 4,
+            workLabel: 'WORK SESSION',
+            showCounter: true,
+            showRing: true,
+            autoStartBreaks: false,
+            darkMode: false,
+            workColor: '#f4c3d9',
+            breakColor: '#48bb78',
+            textColor: '#37352F',
+            bgColor: '#FFFFFF'
+        };
+
+        // Duration inputs
+        const durationInputs = [
+            { id: 'work-duration', key: 'workDuration' },
+            { id: 'short-break', key: 'shortBreak' },
+            { id: 'long-break', key: 'longBreak' },
+            { id: 'sessions-before-long', key: 'sessionsBeforeLong' }
+        ];
+
+        durationInputs.forEach(({ id, key }) => {
+            document.getElementById(id).addEventListener('input', function() {
+                settings[key] = parseInt(this.value) || 1;
+                updatePreview();
+            });
+        });
+
+        // Widget text input
+        document.getElementById('widget-text').addEventListener('input', function() {
+            settings.workLabel = this.value || 'WORK SESSION';
+            updatePreview();
+        });
+
+        // Color pickers
+        const colorInputs = [
+            { id: 'work-color', key: 'workColor', hexId: 'work-color-hex' },
+            { id: 'break-color', key: 'breakColor', hexId: 'break-color-hex' },
+            { id: 'text-color', key: 'textColor', hexId: 'text-color-hex' },
+            { id: 'bg-color', key: 'bgColor', hexId: 'bg-color-hex' }
+        ];
+
+        colorInputs.forEach(({ id, key, hexId }) => {
+            const input = document.getElementById(id);
+            const hex = document.getElementById(hexId);
+            input.addEventListener('input', function() {
+                settings[key] = this.value;
+                hex.textContent = this.value.toUpperCase();
+                updatePreview();
+            });
+        });
+
+        // Toggle switches
+        const toggles = [
+            { id: 'show-counter', key: 'showCounter' },
+            { id: 'show-ring', key: 'showRing' },
+            { id: 'auto-start-breaks', key: 'autoStartBreaks' },
+            { id: 'dark-mode', key: 'darkMode' }
+        ];
+
+        toggles.forEach(({ id, key }) => {
+            document.getElementById(id).addEventListener('change', function() {
+                settings[key] = this.checked;
+                
+                // If dark mode is toggled, update color defaults
+                if (key === 'darkMode') {
+                    if (this.checked) {
+                        settings.bgColor = '#191919';
+                        settings.textColor = '#FFFFFF';
+                        document.getElementById('bg-color').value = '#191919';
+                        document.getElementById('text-color').value = '#FFFFFF';
+                        document.getElementById('bg-color-hex').textContent = '#191919';
+                        document.getElementById('text-color-hex').textContent = '#FFFFFF';
+                    } else {
+                        settings.bgColor = '#FFFFFF';
+                        settings.textColor = '#37352F';
+                        document.getElementById('bg-color').value = '#FFFFFF';
+                        document.getElementById('text-color').value = '#37352F';
+                        document.getElementById('bg-color-hex').textContent = '#FFFFFF';
+                        document.getElementById('text-color-hex').textContent = '#37352F';
+                    }
+                }
+                
+                updatePreview();
+            });
+        });
+
+        // Generate widget URL
+        function generateWidgetURL() {
+            const params = new URLSearchParams();
+            params.append('workDuration', settings.workDuration);
+            params.append('shortBreak', settings.shortBreak);
+            params.append('longBreak', settings.longBreak);
+            params.append('sessionsBeforeLong', settings.sessionsBeforeLong);
+            params.append('workLabel', settings.workLabel);
+            params.append('showCounter', settings.showCounter);
+            params.append('showRing', settings.showRing);
+            params.append('autoStartBreaks', settings.autoStartBreaks);
+            params.append('darkMode', settings.darkMode);
+            params.append('workColor', settings.workColor);
+            params.append('breakColor', settings.breakColor);
+            params.append('textColor', settings.textColor);
+            params.append('bgColor', settings.bgColor);
+            return WIDGET_BASE_URL + '?' + params.toString();
+        }
+
+        // Update preview
+        function updatePreview() {
+            const widgetHTML = generateWidgetHTML();
+            const blob = new Blob([widgetHTML], { type: 'text/html' });
+            const blobURL = URL.createObjectURL(blob);
+            previewFrame.src = blobURL;
+        }
+
+        // Generate widget HTML for preview
+        function generateWidgetHTML() {
+            const s = settings;
+            
+            return `<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { 
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: ${s.bgColor};
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+.timer-container {
+    text-align: center;
+    padding: 40px;
+    border-radius: 20px;
+    max-width: 400px;
+    width: 100%;
+}
+.session-label {
+    font-size: 18px;
+    font-weight: 600;
+    color: ${s.textColor};
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+.session-counter {
+    font-size: 14px;
+    color: ${s.textColor};
+    opacity: 0.7;
+    margin-bottom: 30px;
+    display: ${s.showCounter ? 'block' : 'none'};
+}
+.timer-display-wrapper {
+    position: relative;
+    display: inline-block;
+    margin-bottom: 40px;
+}
+.progress-ring {
+    transform: rotate(-90deg);
+    display: ${s.showRing ? 'block' : 'none'};
+}
+.timer-display {
+    font-size: 72px;
+    font-weight: 700;
+    color: ${s.textColor};
+    ${s.showRing ? 'position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);' : ''}
+}
+.controls {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+.btn {
+    padding: 14px 32px;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s;
+    color: white;
+    background: ${s.workColor};
+    box-shadow: 0 4px 12px ${s.workColor}66;
+}
+.btn:hover { transform: translateY(-2px); }
+</style></head><body>
+<div class="timer-container">
+    <div class="session-label">${s.workLabel}</div>
+    <div class="session-counter">Session 1 of ${s.sessionsBeforeLong}</div>
+    <div class="timer-display-wrapper">
+        ${s.showRing ? `<svg class="progress-ring" width="250" height="250">
+            <circle stroke="${s.workColor}" stroke-width="8" fill="transparent" r="110" cx="125" cy="125" opacity="0.2"/>
+            <circle stroke="${s.workColor}" stroke-width="8" fill="transparent" r="110" cx="125" cy="125" 
+                    stroke-dasharray="691" stroke-dashoffset="0"/>
+        </svg>` : ''}
+        <div class="timer-display">${s.workDuration}:00</div>
+    </div>
+    <div class="controls">
+        <button class="btn">Start</button>
+    </div>
+</div>
+</body></html>`;
+        }
+
+        // Form submission
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const url = generateWidgetURL();
+            urlDisplay.textContent = url;
+            resultSection.classList.add('show');
+            resultSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        });
+
+        // Copy URL
+        copyBtn.addEventListener('click', function() {
+            const url = urlDisplay.textContent;
+            
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(url).then(function() {
+                    copyBtn.textContent = '✓ Copied!';
+                    copyBtn.classList.add('copied');
+                    setTimeout(function() {
+                        copyBtn.textContent = 'Copy URL';
+                        copyBtn.classList.remove('copied');
+                    }, 2000);
+                }).catch(function() {
+                    fallbackCopyTextToClipboard(url);
+                });
+            } else {
+                fallbackCopyTextToClipboard(url);
+            }
+        });
+
+        function fallbackCopyTextToClipboard(text) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.top = '0';
+            textArea.style.left = '0';
+            textArea.style.width = '2em';
+            textArea.style.height = '2em';
+            textArea.style.padding = '0';
+            textArea.style.border = 'none';
+            textArea.style.outline = 'none';
+            textArea.style.boxShadow = 'none';
+            textArea.style.background = 'transparent';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    copyBtn.textContent = '✓ Copied!';
+                    copyBtn.classList.add('copied');
+                    setTimeout(function() {
+                        copyBtn.textContent = 'Copy URL';
+                        copyBtn.classList.remove('copied');
+                    }, 2000);
+                }
+            } catch (err) {
+                copyBtn.textContent = '❌ Copy failed';
+                setTimeout(function() {
+                    copyBtn.textContent = 'Copy URL';
+                }, 3000);
+            }
+            
+            document.body.removeChild(textArea);
+        }
+
+        // Initial preview
+        updatePreview();
+    </script>
+</body>
+</html>
