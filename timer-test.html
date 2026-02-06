@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timer Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: #FFFFFF;
+        }
+        .timer {
+            text-align: center;
+        }
+        .display {
+            font-size: 72px;
+            font-weight: 700;
+            color: #37352F;
+            margin-bottom: 30px;
+        }
+        button {
+            padding: 16px 32px;
+            background: #f4c3d9;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="timer">
+        <div class="display" id="display">25:00</div>
+        <button id="btn">Start</button>
+    </div>
+    <script>
+        let time = 25 * 60;
+        let running = false;
+        let interval = null;
+        
+        const display = document.getElementById('display');
+        const btn = document.getElementById('btn');
+        
+        function format(seconds) {
+            const m = Math.floor(seconds / 60);
+            const s = seconds % 60;
+            return m + ':' + (s < 10 ? '0' + s : s);
+        }
+        
+        btn.onclick = function() {
+            if (!running) {
+                running = true;
+                btn.textContent = 'Pause';
+                interval = setInterval(function() {
+                    time--;
+                    display.textContent = format(time);
+                    if (time <= 0) {
+                        clearInterval(interval);
+                        running = false;
+                        btn.textContent = 'Start';
+                        time = 25 * 60;
+                    }
+                }, 1000);
+            } else {
+                clearInterval(interval);
+                running = false;
+                btn.textContent = 'Resume';
+            }
+        };
+    </script>
+</body>
+</html>
