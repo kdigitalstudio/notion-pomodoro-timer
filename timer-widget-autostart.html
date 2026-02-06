@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pomodoro Timer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .timer-container {
+            text-align: center;
+            width: 100%;
+        }
+
+        .session-label {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .session-counter {
+            font-size: 14px;
+            opacity: 0.7;
+            margin-bottom: 30px;
+        }
+
+        .timer-display {
+            font-size: 72px;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="timer-container">
+        <div class="session-label" id="session-label">WORK SESSION</div>
+        <div class="session-counter" id="session-counter">Session 1 of 4</div>
+        <div class="timer-display" id="timer-display">25:00</div>
+    </div>
+
+    <script>
+        // Get URL parameters
+        const params = new URLSearchParams(window.location.search);
+        
+        const settings = {
+            workDuration: parseInt(params.get('workDuration')) || 25,
+            textColor: params.get('textColor') || '#37352F',
+            bgColor: params.get('bgColor') || '#FFFFFF'
+        };
+
+        // Apply styles
+        document.body.style.background = settings.bgColor;
+        document.body.style.color = settings.textColor;
+
+        let timeLeft = settings.workDuration * 60;
+
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return mins + ':' + (secs < 10 ? '0' + secs : secs);
+        }
+
+        function updateDisplay() {
+            document.getElementById('timer-display').textContent = formatTime(timeLeft);
+        }
+
+        // Auto-start countdown
+        updateDisplay();
+        setInterval(function() {
+            if (timeLeft > 0) {
+                timeLeft--;
+                updateDisplay();
+            }
+        }, 1000);
+    </script>
+</body>
+</html>
