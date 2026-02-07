@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pomodoro Timer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .pomodoro-container {
+            text-align: center;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .mode-display {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            opacity: 0.8;
+        }
+
+        .timer-display {
+            position: relative;
+            margin: 0 auto 30px;
+        }
+
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+
+        .progress-ring-circle {
+            transition: stroke-dashoffset 0.3s;
+        }
+
+        .timer-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 64px;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .timer-text.no-ring {
+            position: static;
+            transform: none;
+            margin: 20px 0;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            color: white;
+            min-width: 120px;
+        }
+
+        .btn-secondary {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .session-counter {
+            font-size: 14px;
+            opacity: 0.6;
+            margin-top: 15px;
+        }
+
+        .mode-tabs {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .mode-tab {
+            padding: 8px 16px;
+            border: none;
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .mode-tab.active {
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="pomodoro-container">
+        <div class="mode-display" id="modeDisplay">Focus Time</div>
+        
+        <div class="mode-tabs">
+            <button class="mode-tab" onclick="switchMode('focus')">Focus</button>
+            <button class="mode-tab" onclick="switchMode('short')">Short Break</button>
+            <button class="mode-tab" onclick="switchMode('long')">Long Break</button>
+        </div>
+
+        <div class="timer-display" id="timerDisplay">
+            <svg class="progress-ring" id="progressRing" width="200" height="200">
+                <circle
+                    class="progress-ring-bg"
+                    stroke="rgba(0,0,0,0.1)"
+                    stroke-width="8"
+                    fill="transparent"
+                    r="90"
+                    cx="100"
+                    cy="100"
+                />
+                <circle
+                    class="progress-ring-circle"
+                    id="progressCircle"
+                    stroke-width="8"
+                    fill="transparent"
+                    r="90"
+                    cx="100"
+                    cy="100"
+                />
+            </svg>
+            <div class="timer-text" id="timerText">25:00</div>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-primary" id="startBtn" onclick="toggleTimer()">Start</button>
+            <button class="btn btn-secondary" onclick="resetTimer()">Reset</button>
+        </div>
+
+        <div class="session-counter" id="sessionCounter">Session 1 of 4</div>
+    </div>
+
+    <script>
+        // Get URL parameters
+        const params = new URLSearchParams(window.location.search);
+        
+        const settings = {
+            focusLabel: params.get('focusLabel') || 'Focus Time',
+            focusTime: parseInt(params.get('focusTime')) || 25,
+            shortBreak: parseInt(params.get('shortBreak')) || 5,
+            longBreak: parseInt(params.get('longBreak')) || 15,
+            sessionsBeforeLong: parseInt(params.get('sessionsBeforeLong')) || 4,
+            timerFont: params.get('timerFont') || 'default',
+            bgColor: params.get('bgColor') || '#FFFFFF',
+            textColor: params.get('textColor') || '#37352F',
+            accentColor: params.get('accentColor') || '#A78BFA',
+            autoStart: params.get('autoStart') !== 'false',
+            showProgress: params.get('showProgress') !== 'false',
+            showSession: params.get('showSession') !== 'false',
+            darkMode: params.get('darkMode') === 'true'
+        };
+
+        // Apply styles
+        document.body.style.background = settings.bgColor;
+        document.body.style.color = settings.textColor;
+        
+        // Apply dark mode if enabled
+        if (settings.darkMode) {
+            document.body.style.background = '#1a1a1a';
+            document.body.style.color = '#e0e0e0';
+        }
+
+        const timerText = document.getElementById('timerText');
+        const fontFamily = 
+            settings.timerFont === 'serif' ? 'Georgia, serif' : 
+            settings.timerFont === 'mono' ? "'Courier New', monospace" : 
+            '-apple-system, sans-serif';
+        timerText.style.fontFamily = fontFamily;
+
+        // Hide/show elements based on settings
+        if (!settings.showProgress) {
+            document.getElementById('progressRing').style.display = 'none';
+            timerText.classList.add('no-ring');
+        }
+
+        if (!settings.showSession) {
+            document.getElementById('sessionCounter').style.display = 'none';
+        }
+
+        // Timer state
+        let currentMode = 'focus'; // 'focus', 'short', 'long'
+        let timeLeft = settings.focusTime * 60;
+        let totalTime = settings.focusTime * 60;
+        let isRunning = false;
+        let timerInterval = null;
+        let currentSession = 1;
+
+        // Progress ring setup
+        const circle = document.getElementById('progressCircle');
+        const radius = circle.r.baseVal.value;
+        const circumference = radius * 2 * Math.PI;
+        circle.style.strokeDasharray = `${circumference} ${circumference}`;
+        circle.style.strokeDashoffset = circumference;
+        circle.style.stroke = settings.accentColor;
+
+        function setProgress(percent) {
+            const offset = circumference - (percent / 100) * circumference;
+            circle.style.strokeDashoffset = offset;
+        }
+
+        function updateDisplay() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            timerText.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            
+            const progress = ((totalTime - timeLeft) / totalTime) * 100;
+            setProgress(progress);
+
+            document.getElementById('sessionCounter').textContent = 
+                `Session ${currentSession} of ${settings.sessionsBeforeLong}`;
+
+            // Update mode display
+            const modeNames = {
+                focus: settings.focusLabel,
+                short: 'Short Break',
+                long: 'Long Break'
+            };
+            document.getElementById('modeDisplay').textContent = modeNames[currentMode];
+
+            // Update active tab
+            document.querySelectorAll('.mode-tab').forEach(tab => {
+                tab.classList.remove('active');
+                tab.style.background = 'rgba(0, 0, 0, 0.05)';
+                tab.style.color = settings.textColor;
+            });
+            const activeTab = document.querySelector(`.mode-tab:nth-child(${
+                currentMode === 'focus' ? 1 : currentMode === 'short' ? 2 : 3
+            })`);
+            activeTab.classList.add('active');
+            activeTab.style.background = settings.accentColor;
+            activeTab.style.color = 'white';
+
+            // Update button color
+            document.getElementById('startBtn').style.background = settings.accentColor;
+        }
+
+        function tick() {
+            if (timeLeft > 0) {
+                timeLeft--;
+                updateDisplay();
+            } else {
+                timerComplete();
+            }
+        }
+
+        function timerComplete() {
+            if (currentMode === 'focus') {
+                // Move to break
+                if (currentSession >= settings.sessionsBeforeLong) {
+                    currentMode = 'long';
+                    currentSession = 1;
+                } else {
+                    currentMode = 'short';
+                    currentSession++;
+                }
+            } else {
+                // Move to focus
+                currentMode = 'focus';
+            }
+
+            resetTimer();
+            
+            if (settings.autoStart && currentMode !== 'focus') {
+                // Auto-start breaks
+                setTimeout(() => toggleTimer(), 1000);
+            }
+        }
+
+        function toggleTimer() {
+            isRunning = !isRunning;
+            const startBtn = document.getElementById('startBtn');
+            
+            if (isRunning) {
+                startBtn.textContent = 'Pause';
+                timerInterval = setInterval(tick, 1000);
+            } else {
+                startBtn.textContent = 'Start';
+                clearInterval(timerInterval);
+            }
+        }
+
+        function resetTimer() {
+            isRunning = false;
+            clearInterval(timerInterval);
+            document.getElementById('startBtn').textContent = 'Start';
+            
+            if (currentMode === 'focus') {
+                totalTime = settings.focusTime * 60;
+            } else if (currentMode === 'short') {
+                totalTime = settings.shortBreak * 60;
+            } else {
+                totalTime = settings.longBreak * 60;
+            }
+            
+            timeLeft = totalTime;
+            updateDisplay();
+        }
+
+        function switchMode(mode) {
+            if (isRunning) {
+                toggleTimer();
+            }
+            
+            currentMode = mode;
+            resetTimer();
+        }
+
+        // Initialize
+        updateDisplay();
+    </script>
+</body>
+</html>
